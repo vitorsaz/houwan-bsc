@@ -2,11 +2,151 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { getSupabase, Token, Trade, SystemStatus } from '../lib/supabase';
 
 // ═══════════════════════════════════════════════════════════════
 // 猴王 - 主仪表板
 // ═══════════════════════════════════════════════════════════════
+
+// 模拟数据 - 用于演示
+const MOCK_STATUS: SystemStatus = {
+    id: 1,
+    status: '在线',
+    wallet_address: '0x742d35Cc6634C0532925a3b844Bc9e7595f8fE58',
+    balance_bnb: 2.4567,
+    total_pnl: 0.3421,
+    total_trades: 47,
+    wins: 31,
+    losses: 16,
+    win_rate: 65.96,
+    updated_at: new Date().toISOString()
+};
+
+const MOCK_TOKENS: Token[] = [
+    {
+        ca: '0x1234567890abcdef1234567890abcdef12345678',
+        nome: 'PepeBSC',
+        simbolo: 'PEPEB',
+        logo: '/monkey-logo.png',
+        market_cap: 125000,
+        preco: 0.00000234,
+        holders: 1523,
+        liquidity: 45000,
+        volume_24h: 89000,
+        score: 78,
+        claude_score: 78,
+        claude_decision: 'BUY',
+        status: 'holding',
+        criado_em: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+        ca: '0xabcdef1234567890abcdef1234567890abcdef12',
+        nome: 'MoonDog',
+        simbolo: 'MDOG',
+        logo: '/monkey-logo.png',
+        market_cap: 89000,
+        preco: 0.00000156,
+        holders: 876,
+        liquidity: 32000,
+        volume_24h: 56000,
+        score: 72,
+        claude_score: 72,
+        claude_decision: 'BUY',
+        status: 'sold_tp',
+        criado_em: new Date(Date.now() - 7200000).toISOString()
+    },
+    {
+        ca: '0x9876543210fedcba9876543210fedcba98765432',
+        nome: 'SafeElonMars',
+        simbolo: 'SEM',
+        logo: '/monkey-logo.png',
+        market_cap: 45000,
+        preco: 0.00000089,
+        holders: 234,
+        liquidity: 12000,
+        volume_24h: 23000,
+        score: 45,
+        claude_score: 45,
+        claude_decision: 'SKIP',
+        status: 'rejected',
+        criado_em: new Date(Date.now() - 10800000).toISOString()
+    },
+    {
+        ca: '0xfedcba9876543210fedcba9876543210fedcba98',
+        nome: 'BabyDragon',
+        simbolo: 'BDRG',
+        logo: '/monkey-logo.png',
+        market_cap: 156000,
+        preco: 0.00000345,
+        holders: 2341,
+        liquidity: 67000,
+        volume_24h: 134000,
+        score: 82,
+        claude_score: 82,
+        claude_decision: 'BUY',
+        status: 'analyzing',
+        criado_em: new Date(Date.now() - 1800000).toISOString()
+    }
+];
+
+const MOCK_TRADES: Trade[] = [
+    {
+        id: '1',
+        token_id: '0x1234567890abcdef1234567890abcdef12345678',
+        tipo: 'buy',
+        valor_bnb: 0.05,
+        preco: 0.00000234,
+        pnl_bnb: null,
+        tx_signature: '0xabc123...',
+        data: new Date(Date.now() - 3600000).toISOString(),
+        tokens: MOCK_TOKENS[0]
+    },
+    {
+        id: '2',
+        token_id: '0xabcdef1234567890abcdef1234567890abcdef12',
+        tipo: 'buy',
+        valor_bnb: 0.05,
+        preco: 0.00000156,
+        pnl_bnb: null,
+        tx_signature: '0xdef456...',
+        data: new Date(Date.now() - 7200000).toISOString(),
+        tokens: MOCK_TOKENS[1]
+    },
+    {
+        id: '3',
+        token_id: '0xabcdef1234567890abcdef1234567890abcdef12',
+        tipo: 'sell',
+        valor_bnb: 0.0785,
+        preco: 0.00000245,
+        pnl_bnb: 0.0285,
+        tx_signature: '0xghi789...',
+        data: new Date(Date.now() - 5400000).toISOString(),
+        tokens: MOCK_TOKENS[1]
+    },
+    {
+        id: '4',
+        token_id: '0x5555666677778888999900001111222233334444',
+        tipo: 'buy',
+        valor_bnb: 0.05,
+        preco: 0.00000067,
+        pnl_bnb: null,
+        tx_signature: '0xjkl012...',
+        data: new Date(Date.now() - 14400000).toISOString(),
+        tokens: { ...MOCK_TOKENS[0], simbolo: 'FLOKI2', nome: 'FlokiBSC' }
+    },
+    {
+        id: '5',
+        token_id: '0x5555666677778888999900001111222233334444',
+        tipo: 'sell',
+        valor_bnb: 0.0342,
+        preco: 0.00000045,
+        pnl_bnb: -0.0158,
+        tx_signature: '0xmno345...',
+        data: new Date(Date.now() - 12600000).toISOString(),
+        tokens: { ...MOCK_TOKENS[0], simbolo: 'FLOKI2', nome: 'FlokiBSC' }
+    }
+];
 
 export default function Home() {
     const [loading, setLoading] = useState(true);
@@ -14,6 +154,7 @@ export default function Home() {
     const [trades, setTrades] = useState<Trade[]>([]);
     const [tokens, setTokens] = useState<Token[]>([]);
     const [activeTab, setActiveTab] = useState<'terminal' | 'watching' | 'about'>('terminal');
+    const [useMockData, setUseMockData] = useState(false);
 
     // 加载数据
     useEffect(() => {
@@ -22,12 +163,23 @@ export default function Home() {
                 const supabase = getSupabase();
 
                 // 获取系统状态
-                const { data: statusData } = await supabase
+                const { data: statusData, error: statusError } = await supabase
                     .from('system_status')
                     .select('*')
                     .eq('id', 1)
                     .single();
-                if (statusData) setStatus(statusData);
+
+                // 如果数据库没有数据或出错，使用模拟数据
+                if (statusError || !statusData) {
+                    setUseMockData(true);
+                    setStatus(MOCK_STATUS);
+                    setTrades(MOCK_TRADES);
+                    setTokens(MOCK_TOKENS);
+                    setLoading(false);
+                    return;
+                }
+
+                setStatus(statusData);
 
                 // 获取交易记录
                 const { data: tradesData } = await supabase
@@ -35,7 +187,12 @@ export default function Home() {
                     .select('*, tokens(*)')
                     .order('data', { ascending: false })
                     .limit(50);
-                if (tradesData) setTrades(tradesData);
+                if (tradesData && tradesData.length > 0) {
+                    setTrades(tradesData);
+                } else {
+                    setTrades(MOCK_TRADES);
+                    setUseMockData(true);
+                }
 
                 // 获取代币
                 const { data: tokensData } = await supabase
@@ -43,11 +200,21 @@ export default function Home() {
                     .select('*')
                     .order('criado_em', { ascending: false })
                     .limit(100);
-                if (tokensData) setTokens(tokensData);
+                if (tokensData && tokensData.length > 0) {
+                    setTokens(tokensData);
+                } else {
+                    setTokens(MOCK_TOKENS);
+                    setUseMockData(true);
+                }
 
                 setLoading(false);
             } catch (e) {
                 console.error('加载数据错误:', e);
+                // 使用模拟数据
+                setUseMockData(true);
+                setStatus(MOCK_STATUS);
+                setTrades(MOCK_TRADES);
+                setTokens(MOCK_TOKENS);
                 setLoading(false);
             }
         }
@@ -64,11 +231,17 @@ export default function Home() {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
                 <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    className="text-8xl mb-8"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="mb-8"
                 >
-                    🐵
+                    <Image
+                        src="/monkey-logo.png"
+                        alt="猴王"
+                        width={128}
+                        height={128}
+                        className="rounded-full shadow-2xl shadow-[#f0b90b]/30"
+                    />
                 </motion.div>
                 <p className="text-xl text-gray-400">加载中...</p>
                 <div className="flex gap-1 mt-4">
@@ -126,22 +299,34 @@ export default function Home() {
                 >
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-4">
-                            <motion.span
+                            <motion.div
                                 animate={{ y: [0, -10, 0] }}
                                 transition={{ duration: 2, repeat: Infinity }}
-                                className="text-6xl"
                             >
-                                🐵
-                            </motion.span>
+                                <Image
+                                    src="/monkey-logo.png"
+                                    alt="猴王"
+                                    width={80}
+                                    height={80}
+                                    className="rounded-full shadow-lg shadow-[#f0b90b]/20"
+                                />
+                            </motion.div>
                             <div>
                                 <h1 className="text-4xl font-bold gradient-text">猴王</h1>
                                 <p className="text-gray-400">BSC 智能交易机器人</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${isOnline ? 'status-online' : 'status-offline'}`} />
-                            <span className={mood.color}>{mood.emoji} {mood.text}</span>
+                        <div className="flex items-center gap-4">
+                            {useMockData && (
+                                <span className="px-3 py-1 bg-purple-500/20 text-purple-400 text-sm rounded-full">
+                                    演示模式
+                                </span>
+                            )}
+                            <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${isOnline ? 'status-online' : 'status-offline'}`} />
+                                <span className={mood.color}>{mood.emoji} {mood.text}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -363,7 +548,16 @@ export default function Home() {
                         animate={{ opacity: 1 }}
                         className="glass rounded-xl p-6"
                     >
-                        <h2 className="text-2xl font-bold mb-6 gradient-text">🐵 关于猴王</h2>
+                        <div className="flex items-center gap-4 mb-6">
+                            <Image
+                                src="/monkey-logo.png"
+                                alt="猴王"
+                                width={48}
+                                height={48}
+                                className="rounded-full"
+                            />
+                            <h2 className="text-2xl font-bold gradient-text">关于猴王</h2>
+                        </div>
 
                         <div className="space-y-6">
                             <div>
@@ -425,9 +619,18 @@ export default function Home() {
                             </div>
 
                             <div className="text-center pt-6 border-t border-white/10">
-                                <p className="text-gray-500">
-                                    🐵 由一只喜欢香蕉的猴子用爱制作
-                                </p>
+                                <div className="flex items-center justify-center gap-2">
+                                    <Image
+                                        src="/monkey-logo.png"
+                                        alt="猴王"
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full"
+                                    />
+                                    <p className="text-gray-500">
+                                        由猴王用爱制作 🍌
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
