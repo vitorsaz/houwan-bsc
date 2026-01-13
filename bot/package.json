@@ -1,0 +1,31 @@
+{
+  "name": "houwan-bsc-bot",
+  "version": "1.0.0",
+  "description": "猴王 - BSC 智能交易机器人",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "setup": "node scripts/setup.js",
+    "test": "node scripts/test-connections.js",
+    "dev": "node --watch src/index.js",
+    "wallet": "node scripts/create-wallet.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "chalk": "^5.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.9.0",
+    "express": "^4.21.0"
+  },
+  "keywords": [
+    "bsc",
+    "pancakeswap",
+    "trading",
+    "bot",
+    "crypto",
+    "memecoin"
+  ],
+  "author": "猴王",
+  "license": "MIT"
+}
