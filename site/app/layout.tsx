@@ -14,15 +14,21 @@ export const metadata: Metadata = {
     title: `${PROJECT_NAME} - BSC 交易机器人`,
     description: PROJECT_DESCRIPTION,
     keywords: ['BSC', 'BNB', 'PancakeSwap', '交易机器人', 'AI', '迷因币', '加密货币'],
+    icons: {
+        icon: '/monkey-logo.png',
+        apple: '/monkey-logo.png',
+    },
     openGraph: {
         title: `${PROJECT_NAME} - BSC 交易机器人`,
         description: PROJECT_DESCRIPTION,
         type: 'website',
+        images: ['/monkey-logo.png'],
     },
     twitter: {
         card: 'summary_large_image',
         title: `${PROJECT_NAME} - BSC 交易机器人`,
         description: PROJECT_DESCRIPTION,
+        images: ['/monkey-logo.png'],
     },
 };
 
@@ -35,7 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <a href="/" className="flex items-center gap-3">
-                                <span className="text-3xl">🐵</span>
+                                <img
+                                    src="/monkey-logo.png"
+                                    alt="猴王"
+                                    className="w-10 h-10 rounded-full"
+                                />
                                 <span className="text-2xl font-bold gradient-text">{PROJECT_NAME}</span>
                             </a>
 
@@ -82,7 +92,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-2xl">🐵</span>
+                                    <img
+                                        src="/monkey-logo.png"
+                                        alt="猴王"
+                                        className="w-8 h-8 rounded-full"
+                                    />
                                     <h3 className="text-lg font-bold gradient-text">{PROJECT_NAME}</h3>
                                 </div>
                                 <p className="text-gray-400 text-sm">
