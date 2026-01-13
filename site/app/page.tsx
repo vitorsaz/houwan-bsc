@@ -202,33 +202,42 @@ export default function Home() {
     const [tokens, setTokens] = useState<Token[]>([]);
     const [activeTab, setActiveTab] = useState<'terminal' | 'watching' | 'about'>('terminal');
     const [useMockData, setUseMockData] = useState(false);
+    const [initialLoad, setInitialLoad] = useState(true);
 
-    // 加载数据
+    // Carregamento inicial com delay de 3 segundos
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setInitialLoad(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Carregar dados
     useEffect(() => {
         async function loadData() {
             try {
                 const supabase = getSupabase();
 
-                // 获取系统状态
+                // Buscar status do sistema
                 const { data: statusData, error: statusError } = await supabase
                     .from('system_status')
                     .select('*')
                     .eq('id', 1)
                     .single();
 
-                // 如果数据库没有数据或出错，使用模拟数据
+                // Se não houver dados ou erro, usar dados de demonstração
                 if (statusError || !statusData) {
                     setUseMockData(true);
                     setStatus(MOCK_STATUS);
                     setTrades(MOCK_TRADES);
                     setTokens(MOCK_TOKENS);
-                    setLoading(false);
+                    if (!initialLoad) setLoading(false);
                     return;
                 }
 
                 setStatus(statusData);
 
-                // 获取交易记录
+                // Buscar trades
                 const { data: tradesData } = await supabase
                     .from('trades')
                     .select('*, tokens(*)')
@@ -241,7 +250,7 @@ export default function Home() {
                     setUseMockData(true);
                 }
 
-                // 获取代币
+                // Buscar tokens
                 const { data: tokensData } = await supabase
                     .from('tokens')
                     .select('*')
@@ -254,27 +263,27 @@ export default function Home() {
                     setUseMockData(true);
                 }
 
-                setLoading(false);
+                if (!initialLoad) setLoading(false);
             } catch (e) {
-                console.error('加载数据错误:', e);
-                // 使用模拟数据
+                console.error('Erro ao carregar dados:', e);
+                // Usar dados de demonstração
                 setUseMockData(true);
                 setStatus(MOCK_STATUS);
                 setTrades(MOCK_TRADES);
                 setTokens(MOCK_TOKENS);
-                setLoading(false);
+                if (!initialLoad) setLoading(false);
             }
         }
 
         loadData();
 
-        // 轮询更新
+        // Atualizar a cada 5 segundos
         const interval = setInterval(loadData, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [initialLoad]);
 
-    // 加载画面
-    if (loading) {
+    // Tela de carregamento (mínimo 3 segundos)
+    if (loading || initialLoad) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
                 <motion.div
